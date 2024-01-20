@@ -30,6 +30,11 @@ class Room extends Model
         'status',
     ];
 
+    protected $casts = [
+        'type' => RoomTypeEnum::class,
+        'status' => RoomStatusEnum::class,
+    ];
+
     public function booking(): HasMany
     {
         return $this->hasMany(Booking::class);

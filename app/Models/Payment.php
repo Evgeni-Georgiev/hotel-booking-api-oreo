@@ -31,7 +31,10 @@ class Payment extends Model
         'status',
     ];
 
-    // ...
+    protected $casts = [
+        'status' => PaymentStatusEnum::class,
+    ];
+
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class, 'booking_id');
