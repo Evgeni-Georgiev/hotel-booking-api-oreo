@@ -3,64 +3,51 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCustomerRequest;
-use App\Http\Requests\UpdateCustomerRequest;
 use App\Models\Customer;
+use Illuminate\Http\JsonResponse;
 
 class CustomerController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return response()->json(['message' => 'customers', 'data' => Customer::all()]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCustomerRequest $request)
+    public function store(StoreCustomerRequest $request): JsonResponse
     {
-        //
+        $customer = Customer::create($this->customerDataValidated($request));
+        return response()->json(['message' => 'Customer created successfully!', 'data' => $customer], 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Customer $customer)
+    public function show(Customer $customer): JsonResponse
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Customer $customer)
-    {
-        //
+        return response()->json(['customer' => $this->foundCustomer($customer)]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCustomerRequest $request, Customer $customer)
+    public function update(StoreCustomerRequest $request, Customer $customer): JsonResponse
     {
-        //
+        $this->foundCustomer($customer)->update($this->customerDataValidated($request));
+        return response()->json(['message' => 'Customer updated successfully!'], 202);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Customer $customer)
-    {
-        //
+    private function foundCustomer(Customer $customer) {
+        return Customer::find($customer->id);
+    }
+
+    private function customerDataValidated(StoreCustomerRequest $request) {
+        // also handle validation error exceptions
+        return $request->validated();
     }
 }

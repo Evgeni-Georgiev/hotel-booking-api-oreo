@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\UniquePaymentForBooking;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePaymentRequest extends FormRequest
@@ -11,7 +12,7 @@ class StorePaymentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->can('create-payment');
     }
 
     /**
@@ -22,7 +23,29 @@ class StorePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'booking_id' => 'required|exists:booking,id',
+            'amount' => 'required|numeric|min:0',
+            'payment_date' => [
+                'required',
+                'date',
+                new UniquePaymentForBooking($this->input('booking_id'), $this->input('payment_date')),
+            ],
+            'status' => 'required|in:completed,pending,failed',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'booking_id.required' => 'The booking ID is required.',
+            'booking_id.exists' => 'The selected booking does not exist.',
+            'amount.required' => 'The payment amount is required.',
+            'amount.numeric' => 'The payment amount must be a number.',
+            'amount.min' => 'The payment amount must be at least :min.',
+            'payment_date.required' => 'The payment date is required.',
+            'payment_date.date' => 'Invalid date format for the payment date.',
+            'status.required' => 'The payment status is required.',
+            'status.in' => 'Invalid payment status. Accepted values are: completed, pending, failed.',
         ];
     }
 }

@@ -11,7 +11,7 @@ class StoreCustomerRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->can('create-customer');
     }
 
     /**
@@ -22,7 +22,22 @@ class StoreCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string',
+            'email' => 'required|email|unique:customer,email',
+            'phone_number' => 'required|string',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'The name is required.',
+            'name.string' => 'The name must be a string.',
+            'email.required' => 'The email is required.',
+            'email.email' => 'Invalid email format.',
+            'email.unique' => 'The email has already been taken.',
+            'phone_number.required' => 'The phone number is required.',
+            'phone_number.string' => 'The phone number must be a string.',
         ];
     }
 }
