@@ -25,7 +25,6 @@ class Room extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'id',
         'number',
         'type',
         'price_per_night',
