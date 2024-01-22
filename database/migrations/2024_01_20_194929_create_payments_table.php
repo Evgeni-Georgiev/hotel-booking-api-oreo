@@ -13,12 +13,11 @@ return new class extends Migration
     {
         Schema::create('payment', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('booking_id');
+            $table->foreignId('booking_id')->constrained('booking');
             $table->decimal('amount', 10, 2);
             $table->date('payment_date');
-            $table->string('status');
+            $table->enum('status', ['pending', 'complete', 'failed'])->default('complete');
             $table->timestamps();
-            $table->foreign('booking_id')->references('id')->on('booking')->onDelete('cascade');
         });
     }
 

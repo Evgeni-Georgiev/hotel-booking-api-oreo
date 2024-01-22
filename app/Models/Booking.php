@@ -24,7 +24,6 @@ class Booking extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'id',
         'room_id',
         'customer_id',
         'check_in_date',
