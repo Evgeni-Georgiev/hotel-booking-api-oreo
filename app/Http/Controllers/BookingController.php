@@ -3,64 +3,51 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBookingRequest;
-use App\Http\Requests\UpdateBookingRequest;
 use App\Models\Booking;
+use Illuminate\Http\JsonResponse;
 
 class BookingController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return response()->json(['message' => 'bookings', 'data' => Booking::all()]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreBookingRequest $request)
+    public function store(StoreBookingRequest $request): JsonResponse
     {
-        //
+        $booking = Booking::create($this->bookingDataValidated($request));
+        return response()->json(['message' => 'Booking created successfully!', 'data' => $booking], 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Booking $booking)
+    public function show(Booking $booking): JsonResponse
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Booking $booking)
-    {
-        //
+        return response()->json(['booking' => $this->foundBooking($booking)]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateBookingRequest $request, Booking $booking)
+    public function update(StoreBookingRequest $request, Booking $booking)
     {
-        //
+        $this->foundBooking($booking)->update($this->bookingDataValidated($request));
+        return response()->json(['message' => 'Booking Updated successfully!'], 202);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Booking $booking)
-    {
-        //
+    private function foundBooking(Booking $booking) {
+        return Booking::find($booking->id);
+    }
+
+    private function bookingDataValidated(StoreBookingRequest $request) {
+        // also handle validation error exceptions
+        return $request->validated();
     }
 }
