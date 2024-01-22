@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('booking_id');
             $table->decimal('amount', 10, 2);
             $table->date('payment_date');
-            $table->string('status');
+            $table->enum('status', ['pending', 'complete', 'failed'])->default('complete');
             $table->timestamps();
             $table->foreign('booking_id')->references('id')->on('booking')->onDelete('cascade');
         });
