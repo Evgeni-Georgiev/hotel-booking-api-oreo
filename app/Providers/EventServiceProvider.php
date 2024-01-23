@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Events\BookingCanceledEvent;
+use App\Events\BookingMadeEvent;
+use App\Events\CheckOutDatePassedEvent;
+use App\Listeners\BookingCanceledListener;
+use App\Listeners\BookingMadeListener;
+use App\Listeners\UpdateRoomStatusListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -17,6 +23,15 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
+        ],
+        BookingMadeEvent::class => [
+            BookingMadeListener::class,
+        ],
+        BookingCanceledEvent::class => [
+            BookingCanceledListener::class,
+        ],
+        CheckOutDatePassedEvent::class => [
+            UpdateRoomStatusListener::class,
         ],
     ];
 
