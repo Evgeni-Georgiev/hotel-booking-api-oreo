@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\RoomNotFoundException;
 use App\Http\Requests\StoreRoomRequest;
 use App\Models\Room;
 use Illuminate\Http\JsonResponse;
@@ -10,43 +11,49 @@ class RoomController extends Controller
 {
     /**
      * Display a listing of the resource.
+     *
+     * @return JsonResponse A JSON response indicating operation message.
      */
     public function index(): JsonResponse
     {
-        return response()->json(['rooms' => Room::all()]);
+        return response()->json([
+            'message' => 'rooms',
+            'rooms' => Room::all()
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
+     *
+     * @param StoreRoomRequest $request The request containing the input data.
+     * @return JsonResponse A JSON response indicating operation message.
      */
     public function store(StoreRoomRequest $request): JsonResponse
     {
-        $room = Room::create($this->roomDataValidated($request));
-        return response()->json($room, 201);
+        $room = Room::create($request->validated());
+        return response()->json([
+            'message' => 'Room created successfully!',
+            'data' => $room
+        ], 201);
     }
 
     /**
      * Display the specified resource.
+     *
+     * @param Room $room The room instance to be fetched.
+     * @return JsonResponse A JSON response indicating operation message.
+     * @throws RoomNotFoundException If searched room is not found.
      */
     public function show(Room $room): JsonResponse
     {
-        return response()->json(['room' => $this->foundRoom($room)]);
-    }
+        $roomFound = Room::find($room->id);
+        if (!$roomFound) {
+            throw new RoomNotFoundException('Room not found!');
+        }
 
-    // ...
-
-    public function update(StoreRoomRequest $request, Room $room): JsonResponse
-    {
-        $this->foundRoom($room)->update($this->roomDataValidated($request));
-        return response()->json(['message' => 'Room Updated successfully!'], 202);
-    }
-
-    private function foundRoom(Room $room) {
-        return Room::find($room->id);
-    }
-
-    private function roomDataValidated(StoreRoomRequest $request) {
-        // also handle validation error exceptions
-        return $request->validated();
+        return response()->json([
+            'message' => 'Room found!',
+            'data' => $roomFound
+        ]);
     }
 }

@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Enum\PaymentStatusEnum;
 use App\Events\BookingCanceledEvent;
 use App\Events\BookingMadeEvent;
+use App\Exceptions\BookingNotFoundException;
+use App\Exceptions\PaymentNotFoundException;
+use App\Exceptions\UnavailableRoomException;
+use App\Exceptions\UnavailableRoomForSpecifiedRangeException;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
+use App\Models\Payment;
 use App\Models\Room;
 use Carbon\Carbon;
 use Exception;
@@ -15,70 +21,109 @@ class BookingController extends Controller
 {
     /**
      * Display a listing of the resource.
+     *
+     * @return JsonResponse A JSON response indicating operation message.
      */
     public function index(): JsonResponse
     {
-        return response()->json(['message' => 'bookings', 'data' => Booking::all()]);
+        return response()->json([
+            'message' => 'bookings',
+            'data' => Booking::all()
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
      * @param StoreBookingRequest $request The request containing the input data for the new booking.
-     *
+     * @return JsonResponse A JSON response indicating operation message.
      * @throws Exception If there are validation errors or no available rooms.
-     *
-     * @return JsonResponse A JSON response indicating the success of the operation.
      */
     public function store(StoreBookingRequest $request): JsonResponse
     {
         $booking = Booking::create($this->bookingDataValidated($request));
+        $this->createPayment($booking);
         $room = Room::find($booking->room_id);
         event(new BookingMadeEvent($booking, $room));
-        return response()->json(['message' => 'Booking created successfully!', 'data' => $booking], 201);
+        return response()->json([
+            'message' => 'Booking created successfully!',
+            'data' => $booking
+        ], 201);
     }
 
     /**
      * Display the specified resource.
+     *
+     * @param Booking $booking The booking instance to be fetched.
+     * @return JsonResponse A JSON response indicating operation message.
+     * @throws BookingNotFoundException If searched booking is not found.
      */
     public function show(Booking $booking): JsonResponse
     {
-        return response()->json(['booking' => $this->foundBooking($booking)]);
+        return response()->json([
+            'message' => 'Booking found!',
+            'data' => $this->foundBooking($booking)
+        ]);
     }
 
     /**
      * Cancel booked room.
      *
-     * @param Booking $booking
-     * @return JsonResponse
+     * @param Booking $booking The booking instance to be canceled.
+     * @return JsonResponse A JSON response indicating operation message.
+     * @throws BookingNotFoundException If searched booking is not found.
      */
     public function destroy(Booking $booking): JsonResponse
     {
-        $booking = Booking::find($booking->id);
+        $booking = $this->foundBooking($booking);
         $room = Room::find($booking->room_id);
-
-        if (!$booking) {
-            return response()->json(['error' => 'Booking not found.'], 404);
-        }
 
         event(new BookingCanceledEvent($booking, $room));
         $booking->delete();
 
-        return response()->json(['message' => 'Booking canceled successfully.']);
+        return response()->json([
+            'message' => 'Booking canceled successfully.'
+        ]);
     }
 
-    private function foundBooking(Booking $booking) {
-        return Booking::find($booking->id);
+    /**
+     * Search for a booking by id.
+     *
+     * @param Booking $booking The booking instance to be found.
+     * @return Booking The found booking.
+     * @throws BookingNotFoundException If the booking is not found.
+     */
+    private function foundBooking(Booking $booking): Booking
+    {
+        $foundBooking = Booking::find($booking->id);
+        if (!$foundBooking) {
+            throw new BookingNotFoundException('Booking not found!');
+        }
+        return $foundBooking;
+    }
+
+    /**
+     * Perform payment when making a booking.
+     *
+     * @param Booking $booking The booking instance to associate with payment.
+     * @return void
+     */
+    private function createPayment(Booking $booking): void
+    {
+        Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => $booking->total_price / 2,
+            'payment_date' => now(),
+            'status' => PaymentStatusEnum::DOWN_PAYMENT
+        ]);
     }
 
     /**
      * Validates input data for creating a booking.
      *
      * @param StoreBookingRequest $request The request containing the input data.
-     *
-     * @throws Exception If there are validation errors or no available rooms.
-     *
      * @return array The validated booking data, including the room object and calculated total price.
+     * @throws UnavailableRoomForSpecifiedRangeException|UnavailableRoomException If there are unavailable date ranges or unavailable rooms.
      */
     private function bookingDataValidated(StoreBookingRequest $request): array
     {
@@ -91,11 +136,18 @@ class BookingController extends Controller
         } else {
             // If room_id is set explicitly, fetch the Room object
             $room = Room::find($validatedData['room_id']);
-
-            if (!$room || !$this->isRoomAvailableForDateRange($room, $validatedData['check_in_date'], $validatedData['check_out_date'])) {
-                throw new Exception('Room is not available for the specified dates range.');
-            }
         }
+
+        if (!$room || !$this->isRoomAvailableForDateRange(
+                $room,
+                $validatedData['check_in_date'],
+                $validatedData['check_out_date'])
+        ) {
+            throw new UnavailableRoomForSpecifiedRangeException(
+                'Room is not available for the specified dates range.'
+            );
+        }
+
         $validatedData['room'] = $room;
         $durationInDays = Carbon::parse($validatedData['check_in_date'])->diffInDays($validatedData['check_out_date']);
         $validatedData['total_price'] = $durationInDays * $validatedData['room']->price_per_night;
@@ -106,15 +158,14 @@ class BookingController extends Controller
     /**
      * Get a random available room.
      *
-     * @throws Exception If there are no available rooms.
-     *
      * @return Room The random available room.
+     * @throws UnavailableRoomException If there are no available rooms.
      */
     private function getRandomAvailableRoom(): Room
     {
         $availableRooms = Room::where('status', 'available');
         if ($availableRooms->count() == 0) {
-            throw new Exception('No available rooms.');
+            throw new UnavailableRoomException('No available rooms.');
         }
         return $availableRooms->get()->random();
     }
@@ -125,7 +176,6 @@ class BookingController extends Controller
      * @param Room $room The room to check for availability.
      * @param string $checkInDate The check-in date.
      * @param string $checkOutDate The check-out date.
-     *
      * @return bool True if the room is available; false otherwise.
      */
     private function isRoomAvailableForDateRange(Room $room, string $checkInDate, string $checkOutDate): bool
