@@ -12,7 +12,7 @@ class StorePaymentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('create-payment');
+        return true;
     }
 
     /**
@@ -30,7 +30,7 @@ class StorePaymentRequest extends FormRequest
                 'date',
                 new UniquePaymentForBooking($this->input('booking_id'), $this->input('payment_date')),
             ],
-            'status' => 'required|in:completed,pending,failed',
+            'status' => 'required|in:complete,pending,failed,down_payment',
         ];
     }
 
@@ -45,7 +45,7 @@ class StorePaymentRequest extends FormRequest
             'payment_date.required' => 'The payment date is required.',
             'payment_date.date' => 'Invalid date format for the payment date.',
             'status.required' => 'The payment status is required.',
-            'status.in' => 'Invalid payment status. Accepted values are: completed, pending, failed.',
+            'status.in' => 'Invalid payment status. Accepted values are: complete, pending, failed, down_payment.',
         ];
     }
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('booking_id')->constrained('booking');
             $table->decimal('amount', 10, 2);
             $table->date('payment_date');
-            $table->enum('status', ['pending', 'complete', 'failed'])->default('complete');
+            $table->enum('status', ['pending', 'complete', 'failed', 'down_payment'])->default('complete');
             $table->timestamps();
         });
     }
