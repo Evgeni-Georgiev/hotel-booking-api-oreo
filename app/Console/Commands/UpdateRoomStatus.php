@@ -33,12 +33,12 @@ class UpdateRoomStatus extends Command
             // Check if there are any bookings for the current room
             $hasBookings = Booking::where('room_id', $room->id)->exists();
 
-            // Check if there is a booking for the current room that has not passed
-            $hasUnexpiredBooking = Booking::where('room_id', $room->id)
+            $hasValidBooking = Booking::where('room_id', $room->id)
                 ->whereDate('check_out_date', '>=', now())
+                ->whereDate('check_in_date', '<=', now())
                 ->exists();
 
-            if ($hasBookings && $hasUnexpiredBooking) {
+            if ($hasBookings && $hasValidBooking) {
                 $roomStatus = RoomStatusEnum::OCCUPIED;
             } elseif ($hasBookings) {
                 $roomStatus = RoomStatusEnum::AVAILABLE;

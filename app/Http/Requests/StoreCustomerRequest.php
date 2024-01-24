@@ -11,7 +11,7 @@ class StoreCustomerRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('create-customer');
+        return true;
     }
 
     /**
@@ -24,7 +24,7 @@ class StoreCustomerRequest extends FormRequest
         return [
             'name' => 'required|string',
             'email' => 'required|email|unique:customer,email',
-            'phone_number' => 'required|string',
+            'phone_number' => 'required|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
         ];
     }
 
