@@ -33,6 +33,8 @@ class BookingController extends Controller
     public function store(StoreBookingRequest $request): JsonResponse
     {
         $booking = Booking::create($this->bookingDataValidated($request));
+        $room = Room::find($booking->room_id);
+        event(new BookingMadeEvent($booking, $room));
         return response()->json(['message' => 'Booking created successfully!', 'data' => $booking], 201);
     }
 
@@ -45,18 +47,6 @@ class BookingController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
-    public function update(StoreBookingRequest $request, Booking $booking): JsonResponse
-    {
-        if (!$this->foundBooking($booking)) {
-            return response()->json(['error' => 'Booking not found.'], 404);
-        }
-        $this->foundBooking($booking)->update($this->bookingDataValidated($request));
-        return response()->json(['message' => 'Booking Updated successfully!'], 202);
-    }
-
-    /**
      * Cancel booked room.
      *
      * @param Booking $booking
@@ -65,10 +55,15 @@ class BookingController extends Controller
     public function destroy(Booking $booking): JsonResponse
     {
         $booking = Booking::find($booking->id);
+        $room = Room::find($booking->room_id);
+
         if (!$booking) {
             return response()->json(['error' => 'Booking not found.'], 404);
         }
+
+        event(new BookingCanceledEvent($booking, $room));
         $booking->delete();
+
         return response()->json(['message' => 'Booking canceled successfully.']);
     }
 
