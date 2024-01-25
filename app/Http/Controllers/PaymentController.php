@@ -40,13 +40,13 @@ class PaymentController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Payment $payment The payment instance to be fetched.
+     * @param int $id The ID of the searched payment.
      * @return JsonResponse A JSON response indicating operation message.
      * @throws PaymentNotFoundException If searched payment is not found.
      */
-    public function show(Payment $payment): JsonResponse
+    public function show(int $id): JsonResponse
     {
-        $paymentFound = Payment::find($payment->id);
+        $paymentFound = Payment::find($id);
         if (!$paymentFound) {
             throw new PaymentNotFoundException('Payment not found!');
         }
