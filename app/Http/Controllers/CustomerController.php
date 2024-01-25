@@ -39,30 +39,30 @@ class CustomerController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Customer $customer The customer instance to be fetched.
+     * @param int $id The ID of the searched booking.
      * @return JsonResponse A JSON response indicating operation message.
      * @throws CustomerNotFoundException If searched customer is not found.
      */
-    public function show(Customer $customer): JsonResponse
+    public function show(int $id): JsonResponse
     {
-        if(!$this->foundCustomer($customer)) {
+        if(!$this->foundCustomer($id)) {
             throw new CustomerNotFoundException('Customer not found!');
         }
         return response()->json([
-            'customer' => $this->foundCustomer($customer)
+            'customer' => $this->foundCustomer($id)
         ]);
     }
 
     /**
      * Search for a customer by id.
      *
-     * @param Customer $customer The customer instance to be found.
+     * @param int $id The ID of the customer instance to be found.
      * @return Customer The found customer.
      * @throws CustomerNotFoundException If the customer is not found.
      */
-    private function foundCustomer(Customer $customer): Customer
+    private function foundCustomer(int $id): Customer
     {
-        $foundCustomer = Customer::find($customer->id);
+        $foundCustomer = Customer::find($id);
         if(!$foundCustomer) {
             throw new CustomerNotFoundException('Customer not found!');
         }

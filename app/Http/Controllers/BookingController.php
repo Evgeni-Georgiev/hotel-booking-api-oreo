@@ -6,7 +6,6 @@ use App\Enum\PaymentStatusEnum;
 use App\Events\BookingCanceledEvent;
 use App\Events\BookingMadeEvent;
 use App\Exceptions\BookingNotFoundException;
-use App\Exceptions\PaymentNotFoundException;
 use App\Exceptions\UnavailableRoomException;
 use App\Exceptions\UnavailableRoomForSpecifiedRangeException;
 use App\Http\Requests\StoreBookingRequest;
@@ -54,28 +53,28 @@ class BookingController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Booking $booking The booking instance to be fetched.
+     * @param int $id The ID of the searched booking.
      * @return JsonResponse A JSON response indicating operation message.
      * @throws BookingNotFoundException If searched booking is not found.
      */
-    public function show(Booking $booking): JsonResponse
+    public function show(int $id): JsonResponse
     {
         return response()->json([
             'message' => 'Booking found!',
-            'data' => $this->foundBooking($booking)
+            'data' => $this->foundBooking($id)
         ]);
     }
 
     /**
      * Cancel booked room.
      *
-     * @param Booking $booking The booking instance to be canceled.
+     * @param int $id The ID of the searched booking.
      * @return JsonResponse A JSON response indicating operation message.
      * @throws BookingNotFoundException If searched booking is not found.
      */
-    public function destroy(Booking $booking): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        $booking = $this->foundBooking($booking);
+        $booking = $this->foundBooking($id);
         $room = Room::find($booking->room_id);
 
         event(new BookingCanceledEvent($booking, $room));
@@ -89,13 +88,13 @@ class BookingController extends Controller
     /**
      * Search for a booking by id.
      *
-     * @param Booking $booking The booking instance to be found.
+     * @param int $id The ID of the searched booking.
      * @return Booking The found booking.
      * @throws BookingNotFoundException If the booking is not found.
      */
-    private function foundBooking(Booking $booking): Booking
+    private function foundBooking(int $id): Booking
     {
-        $foundBooking = Booking::find($booking->id);
+        $foundBooking = Booking::find($id);
         if (!$foundBooking) {
             throw new BookingNotFoundException('Booking not found!');
         }

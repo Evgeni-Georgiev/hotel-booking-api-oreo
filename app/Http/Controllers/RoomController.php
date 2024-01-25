@@ -40,13 +40,13 @@ class RoomController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Room $room The room instance to be fetched.
+     * @param int $id The ID of the searched room.
      * @return JsonResponse A JSON response indicating operation message.
      * @throws RoomNotFoundException If searched room is not found.
      */
-    public function show(Room $room): JsonResponse
+    public function show(int $id): JsonResponse
     {
-        $roomFound = Room::find($room->id);
+        $roomFound = Room::find($id);
         if (!$roomFound) {
             throw new RoomNotFoundException('Room not found!');
         }

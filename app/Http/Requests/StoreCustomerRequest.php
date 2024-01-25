@@ -38,6 +38,7 @@ class StoreCustomerRequest extends FormRequest
             'email.unique' => 'The email has already been taken.',
             'phone_number.required' => 'The phone number is required.',
             'phone_number.string' => 'The phone number must be a string.',
+            'phone_number.regex' => 'The phone number format is invalid.',
         ];
     }
 }
