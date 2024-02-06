@@ -19,7 +19,11 @@ class CustomerController extends Controller
     {
         return response()->json([
             'message' => 'customers',
-            'data' => CustomerResource::collection(Customer::all())
+            'data' => Customer::select(
+                'name',
+                'email',
+                'phone_number'
+            )
         ]);
     }
 

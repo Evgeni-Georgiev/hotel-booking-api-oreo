@@ -19,7 +19,12 @@ class RoomController extends Controller
     {
         return response()->json([
             'message' => 'rooms',
-            'rooms' => RoomResource::collection(Room::all())
+            'rooms' => Room::select(
+                'number',
+                'type',
+                'price_per_night',
+                'status'
+            )
         ]);
     }
 

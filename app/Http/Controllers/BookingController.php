@@ -28,7 +28,13 @@ class BookingController extends Controller
     {
         return response()->json([
             'message' => 'bookings',
-            'data' => BookingResource::collection(Booking::all())
+            'data' => Booking::select(
+                'room_id',
+                'customer_id',
+                'check_in_date',
+                'check_out_date',
+                'total_price'
+            )->get()
         ]);
     }
 

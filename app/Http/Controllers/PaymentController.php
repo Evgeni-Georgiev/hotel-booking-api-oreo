@@ -19,7 +19,12 @@ class PaymentController extends Controller
     {
         return response()->json([
             'message' => 'payments',
-            'data' => PaymentResource::collection(Payment::all())
+            'data' => Payment::select(
+                'booking_id',
+                'amount',
+                'payment_date',
+                'status',
+            )
         ]);
     }
 
