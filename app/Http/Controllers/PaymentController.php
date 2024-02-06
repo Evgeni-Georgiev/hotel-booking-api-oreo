@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\PaymentNotFoundException;
 use App\Http\Requests\StorePaymentRequest;
+use App\Http\Resources\PaymentResource;
 use App\Models\Payment;
 use Illuminate\Http\JsonResponse;
 
@@ -18,7 +19,7 @@ class PaymentController extends Controller
     {
         return response()->json([
             'message' => 'payments',
-            'data' => Payment::all()
+            'data' => PaymentResource::collection(Payment::all())
         ]);
     }
 
@@ -33,7 +34,7 @@ class PaymentController extends Controller
         $payment = Payment::create($request->validated());
         return response()->json([
             'message' => 'Payment proceeded!',
-            'data' => $payment
+            'data' => new PaymentResource($payment)
         ], 201);
     }
 
@@ -44,16 +45,16 @@ class PaymentController extends Controller
      * @return JsonResponse A JSON response indicating operation message.
      * @throws PaymentNotFoundException If searched payment is not found.
      */
-    public function show(int $id): JsonResponse
+    public function show(Payment $payment): JsonResponse
     {
-        $paymentFound = Payment::find($id);
+        $paymentFound = Payment::find($payment->id);
         if (!$paymentFound) {
-            throw new PaymentNotFoundException('Payment not found!');
+            throw new PaymentNotFoundException();
         }
 
         return response()->json([
             'message' => 'Payment found!',
-            'data' => $paymentFound
+            'data' => new PaymentResource($paymentFound)
         ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\CustomerNotFoundException;
 use App\Http\Requests\StoreCustomerRequest;
+use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
 use Illuminate\Http\JsonResponse;
 
@@ -18,7 +19,7 @@ class CustomerController extends Controller
     {
         return response()->json([
             'message' => 'customers',
-            'data' => Customer::all()
+            'data' => CustomerResource::collection(Customer::all())
         ]);
     }
 
@@ -32,40 +33,25 @@ class CustomerController extends Controller
         $customer = Customer::create($request->validated());
         return response()->json([
             'message' => 'Customer created successfully!',
-            'data' => $customer
+            'data' => new CustomerResource($customer)
         ], 201);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param int $id The ID of the searched booking.
+     * @param Customer $customer The model of the searched booking.
      * @return JsonResponse A JSON response indicating operation message.
      * @throws CustomerNotFoundException If searched customer is not found.
      */
-    public function show(int $id): JsonResponse
+    public function show(Customer $customer): JsonResponse
     {
-        if(!$this->foundCustomer($id)) {
-            throw new CustomerNotFoundException('Customer not found!');
+        $foundCustomer = Customer::find($customer->id);
+        if(!$foundCustomer) {
+            throw new CustomerNotFoundException();
         }
         return response()->json([
-            'customer' => $this->foundCustomer($id)
+            'customer' => new CustomerResource($foundCustomer)
         ]);
-    }
-
-    /**
-     * Search for a customer by id.
-     *
-     * @param int $id The ID of the customer instance to be found.
-     * @return Customer The found customer.
-     * @throws CustomerNotFoundException If the customer is not found.
-     */
-    private function foundCustomer(int $id): Customer
-    {
-        $foundCustomer = Customer::find($id);
-        if(!$foundCustomer) {
-            throw new CustomerNotFoundException('Customer not found!');
-        }
-        return $foundCustomer;
     }
 }
