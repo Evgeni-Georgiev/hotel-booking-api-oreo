@@ -31,7 +31,7 @@ class PaymentFactory extends Factory
             'booking_id' => $booking,
             'amount' => fake()->randomFloat(2, 150, 300),
             'payment_date' => $paymentDate,
-            'status' => $paymentStatus->value,
+            'status' => $paymentStatus,
         ];
     }
 }
