@@ -2,6 +2,16 @@
 
 namespace App\Providers;
 
+use App\Exceptions\BookingNotFoundException;
+use App\Exceptions\CustomerNotFoundException;
+use App\Exceptions\PaymentNotFoundException;
+use App\Exceptions\RoomNotFoundException;
+use App\Exceptions\UnavailableRoomException;
+use App\Exceptions\UnavailableRoomForSpecifiedRangeException;
+use App\Models\Booking;
+use App\Models\Customer;
+use App\Models\Payment;
+use App\Models\Room;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
@@ -35,6 +45,30 @@ class RouteServiceProvider extends ServiceProvider
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+        });
+
+        Route::model('room', Room::class, function () {
+            throw new RoomNotFoundException;
+        });
+
+        Route::model('booking', Booking::class, function () {
+            throw new UnavailableRoomException();
+        });
+
+        Route::model('booking', Booking::class, function () {
+            throw new UnavailableRoomForSpecifiedRangeException();
+        });
+
+        Route::model('payment', Payment::class, function () {
+            throw new PaymentNotFoundException();
+        });
+
+        Route::model('customer', Customer::class, function () {
+            throw new CustomerNotFoundException();
+        });
+
+        Route::model('booking', Booking::class, function () {
+            throw new BookingNotFoundException();
         });
     }
 }
