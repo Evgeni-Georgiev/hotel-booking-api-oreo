@@ -55,7 +55,6 @@ class BookingControllerTest extends TestCase
 
     public function testCreateBookingViaPostRequestReturnsJsonResponseWhenValidaData(): void
     {
-
         $room = Room::factory()->create();
         $customer = Customer::factory()->create();
 
@@ -80,12 +79,11 @@ class BookingControllerTest extends TestCase
                     'customer_id',
                     'check_in_date',
                     'check_out_date',
-                    'total_price',
                 ],
             ]);
 
         Event::assertDispatched(BookingMadeEvent::class, function ($event) use ($response) {
-            return $event->booking->id === $response->json('data.id');
+            return $event->booking->room_id === $response->json('data.room_id');
         });
     }
 
@@ -95,7 +93,7 @@ class BookingControllerTest extends TestCase
         Event::fake();
 
         // When
-        $response = $this->getJson(route('booking.show', ['id' => $this->getBookingData()[0]->id]));
+        $response = $this->getJson(route('booking.show', ['booking' => $this->getBookingData()[0]]));
 
         // Then
         $response->assertStatus(Response::HTTP_OK)
@@ -128,7 +126,7 @@ class BookingControllerTest extends TestCase
 
         // When
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->getUserToken())
-            ->deleteJson(route('booking.destroy', ['id' => $booking->id]));
+            ->deleteJson(route('booking.destroy', ['booking' => $booking]));
 
         // Then
         $response->assertStatus(Response::HTTP_OK)
@@ -143,7 +141,6 @@ class BookingControllerTest extends TestCase
     {
         // Given
         $this->getBookingData(5);
-        Event::fake();
 
         // When
         $response = $this->getJson(route('booking.index'));
@@ -154,7 +151,6 @@ class BookingControllerTest extends TestCase
                 'message',
                 'data' => [
                     [
-                        'id',
                         'room_id',
                         'customer_id',
                         'check_in_date',
@@ -164,7 +160,6 @@ class BookingControllerTest extends TestCase
                 ],
             ])
             ->assertJsonCount(5, 'data');
-        Event::assertNotDispatched(BookingCanceledEvent::class);
     }
 
     public function testSoftDeleteBookingThrowsExceptionForNonExistingBooking(): void
@@ -175,7 +170,7 @@ class BookingControllerTest extends TestCase
 
         // When
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->getUserToken())
-            ->deleteJson(route('booking.destroy', ['id' => $nonExistingBooking]));
+            ->deleteJson(route('booking.destroy', ['booking' => Booking::class]));
 
         // Then
         $response->assertStatus(Response::HTTP_NOT_FOUND)

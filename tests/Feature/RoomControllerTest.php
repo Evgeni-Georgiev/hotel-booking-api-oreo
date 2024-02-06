@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Resources\RoomResource;
 use App\Models\Room;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,6 +32,7 @@ class RoomControllerTest extends TestCase
     {
         // Given
         $rooms = Room::factory()->count(2)->create();
+        $roomsCollection = RoomResource::collection($rooms);
 
         // When
         $response = $this->getJson(route('room.index'));
@@ -38,7 +40,7 @@ class RoomControllerTest extends TestCase
         // Then
         $response->assertJson([
             'message' => 'rooms',
-            'rooms' => $rooms->toArray(),
+            'rooms' => $roomsCollection->response()->getData(true),
         ]);
         $response->assertStatus(Response::HTTP_OK);
     }
@@ -59,7 +61,7 @@ class RoomControllerTest extends TestCase
     public function testShowRoomViaGetRequestThrowsExceptionWhenRoomNotFound(): void
     {
         // When
-        $response = $this->getJson(route('room.show', ['id' => 999]));
+        $response = $this->getJson(route('room.show', ['room' => Room::class]));
 
         // Then
         $response->assertStatus(Response::HTTP_NOT_FOUND)
@@ -68,14 +70,13 @@ class RoomControllerTest extends TestCase
                 'message' => 'Room not found!',
             ]);
     }
-
-    public function testShowRoomViaGetRequestReturnJSonResponseWhenValidData(): void
+    public function testShowRoomViaGetRequestReturnJsonResponseWhenValidData(): void
     {
         // Given
         $room = Room::factory()->create();
 
         // When
-        $response = $this->getJson(route('room.show', ['id' => $room->id]));
+        $response = $this->getJson(route('room.show', ['room' => $room]));
 
         // Then
         $response->assertStatus(Response::HTTP_OK)

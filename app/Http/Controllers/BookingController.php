@@ -9,6 +9,7 @@ use App\Exceptions\BookingNotFoundException;
 use App\Exceptions\UnavailableRoomException;
 use App\Exceptions\UnavailableRoomForSpecifiedRangeException;
 use App\Http\Requests\StoreBookingRequest;
+use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Room;
@@ -27,7 +28,13 @@ class BookingController extends Controller
     {
         return response()->json([
             'message' => 'bookings',
-            'data' => Booking::all()
+            'data' => Booking::select(
+                'room_id',
+                'customer_id',
+                'check_in_date',
+                'check_out_date',
+                'total_price'
+            )->get()
         ]);
     }
 
@@ -46,35 +53,35 @@ class BookingController extends Controller
         event(new BookingMadeEvent($booking, $room));
         return response()->json([
             'message' => 'Booking created successfully!',
-            'data' => $booking
+            'data' => new BookingResource($booking)
         ], 201);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param int $id The ID of the searched booking.
+     * @param Booking $booking The model of the searched booking.
      * @return JsonResponse A JSON response indicating operation message.
      * @throws BookingNotFoundException If searched booking is not found.
      */
-    public function show(int $id): JsonResponse
+    public function show(Booking $booking): JsonResponse
     {
         return response()->json([
             'message' => 'Booking found!',
-            'data' => $this->foundBooking($id)
+            'data' => new BookingResource($this->foundBooking($booking))
         ]);
     }
 
     /**
      * Cancel booked room.
      *
-     * @param int $id The ID of the searched booking.
+     * @param Booking $booking The model of the searched booking.
      * @return JsonResponse A JSON response indicating operation message.
      * @throws BookingNotFoundException If searched booking is not found.
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Booking $booking): JsonResponse
     {
-        $booking = $this->foundBooking($id);
+        $booking = $this->foundBooking($booking);
         $room = Room::find($booking->room_id);
 
         event(new BookingCanceledEvent($booking, $room));
@@ -88,15 +95,15 @@ class BookingController extends Controller
     /**
      * Search for a booking by id.
      *
-     * @param int $id The ID of the searched booking.
+     * @param Booking $booking The model of the searched booking.
      * @return Booking The found booking.
      * @throws BookingNotFoundException If the booking is not found.
      */
-    private function foundBooking(int $id): Booking
+    private function foundBooking(Booking $booking): Booking
     {
-        $foundBooking = Booking::find($id);
+        $foundBooking = Booking::find($booking->id);
         if (!$foundBooking) {
-            throw new BookingNotFoundException('Booking not found!');
+            throw new BookingNotFoundException();
         }
         return $foundBooking;
     }
@@ -142,9 +149,7 @@ class BookingController extends Controller
                 $validatedData['check_in_date'],
                 $validatedData['check_out_date'])
         ) {
-            throw new UnavailableRoomForSpecifiedRangeException(
-                'Room is not available for the specified dates range.'
-            );
+            throw new UnavailableRoomForSpecifiedRangeException();
         }
 
         $validatedData['room'] = $room;
@@ -164,7 +169,7 @@ class BookingController extends Controller
     {
         $availableRooms = Room::where('status', 'available');
         if ($availableRooms->count() == 0) {
-            throw new UnavailableRoomException('No available rooms.');
+            throw new UnavailableRoomException();
         }
         return $availableRooms->get()->random();
     }

@@ -43,7 +43,7 @@ class CustomerControllerTest extends TestCase
     public function testShowCustomerViaGetRequestReturnsJsonResponseWhenValidaData(): void
     {
         // When
-        $response = $this->getJson(route('customer.show', ['id' => $this->customer->id]));
+        $response = $this->getJson(route('customer.show', ['customer' => $this->customer]));
 
         // Then
         $response->assertStatus(Response::HTTP_OK);

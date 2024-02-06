@@ -26,9 +26,9 @@ class RoomFactory extends Factory
         $roomType = Arr::random(RoomTypeEnum::cases());
         return [
             'number' => fake()->numberBetween(100, 500),
-            'type' => $roomType->value,
+            'type' => $roomType,
             'price_per_night' => fake()->randomFloat(2, 50, 500),
-            'status' => $roomStatus->value,
+            'status' => $roomStatus,
         ];
     }
 }

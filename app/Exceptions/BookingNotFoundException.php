@@ -10,8 +10,9 @@ class BookingNotFoundException extends Exception
 {
     public function render(Request $request): JsonResponse
     {
+        $param = $request->route()->parameterNames()[0];
         return response()->json([
-            "message" => $this->getMessage()
+            "message" => ucfirst($param) . ' not found!',
         ], 404);
     }
 }

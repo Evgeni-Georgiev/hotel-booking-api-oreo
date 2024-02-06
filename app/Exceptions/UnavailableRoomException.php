@@ -11,7 +11,7 @@ class UnavailableRoomException extends Exception
     public function render(Request $request): JsonResponse
     {
         return response()->json([
-            "message" => $this->getMessage()
+            "message" => 'No available rooms.'
         ], 404);
     }
 }

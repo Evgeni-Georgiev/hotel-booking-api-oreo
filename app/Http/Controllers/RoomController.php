@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\RoomNotFoundException;
 use App\Http\Requests\StoreRoomRequest;
+use App\Http\Resources\RoomResource;
 use App\Models\Room;
 use Illuminate\Http\JsonResponse;
 
@@ -18,7 +19,12 @@ class RoomController extends Controller
     {
         return response()->json([
             'message' => 'rooms',
-            'rooms' => Room::all()
+            'rooms' => Room::select(
+                'number',
+                'type',
+                'price_per_night',
+                'status'
+            )
         ]);
     }
 
@@ -33,27 +39,28 @@ class RoomController extends Controller
         $room = Room::create($request->validated());
         return response()->json([
             'message' => 'Room created successfully!',
-            'data' => $room
+            'data' => new RoomResource($room)
         ], 201);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param int $id The ID of the searched room.
+     * @param Room $room The model of the searched room.
      * @return JsonResponse A JSON response indicating operation message.
      * @throws RoomNotFoundException If searched room is not found.
      */
-    public function show(int $id): JsonResponse
+    public function show(Room $room): JsonResponse
     {
-        $roomFound = Room::find($id);
+        $roomFound = Room::find($room->id);
+
         if (!$roomFound) {
-            throw new RoomNotFoundException('Room not found!');
+            throw new RoomNotFoundException();
         }
 
         return response()->json([
             'message' => 'Room found!',
-            'data' => $roomFound
+            'data' => new RoomResource($roomFound)
         ]);
     }
 }

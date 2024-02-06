@@ -11,7 +11,7 @@ class UnavailableRoomForSpecifiedRangeException extends Exception
     public function render(Request $request): JsonResponse
     {
         return response()->json([
-            "message" => $this->getMessage()
+            "message" => 'Room is not available for the specified dates range.'
         ], 422);
     }
 }
